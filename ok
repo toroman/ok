@@ -59,8 +59,15 @@ if [ "$code" -eq 0 ]; then
     messages="✓ okay
 ✓ okay, nice!
 ✓ okay, cool cool cool!
-✓ okay — amaze amaze amaze!"
-    printf "${GREEN}%s${RESET}\n" "$(echo "$messages" | sed -n "$((RANDOM % 4 + 1))p")"
+✓ okay — amaze amaze amaze!
+✓ okay, you absolute legend
+✓ okay, nailed it
+✓ okay, no notes
+✓ okay, the computer is pleased
+✓ okay — whatever you did, keep doing that"
+    count=$(echo "$messages" | wc -l)
+    pick=$(awk -v n="$count" 'BEGIN { srand(); print int(rand() * n) + 1 }')
+    printf "${GREEN}%s${RESET}\n" "$(echo "$messages" | sed -n "${pick}p")"
     exit 0
 fi
 

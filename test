@@ -1,0 +1,53 @@
+#!/bin/sh
+# Unit tests for ok
+
+OK="$(cd "$(dirname "$0")" && pwd)/ok"
+pass=0
+fail=0
+
+assert() {
+    desc="$1"; expected="$2"; actual="$3"
+    if [ "$actual" = "$expected" ]; then
+        echo "  PASS: $desc"
+        pass=$((pass + 1))
+    else
+        echo "  FAIL: $desc"
+        echo "        expected: $expected"
+        echo "        actual:   $actual"
+        fail=$((fail + 1))
+    fi
+}
+
+# Strip ANSI color codes for comparison
+strip() { printf '%s' "$1" | sed 's/\x1b\[[0-9;]*m//g'; }
+
+echo "--- exit code 0 ---"
+out=$(strip "$("$OK" 0)")
+assert "exit 0 starts with ✓ okay" "1" "$(printf '%s' "$out" | grep -c '^✓ okay')"
+"$OK" 0; assert "exit 0 returns 0" "0" "$?"
+
+echo "--- exit code 0 randomness ---"
+seen=""
+for i in $(seq 1 30); do
+    seen="$seen|$(strip "$("$OK" 0)")"
+done
+distinct=$(printf '%s' "$seen" | tr '|' '\n' | grep -v '^$' | sort -u | wc -l | tr -d ' ')
+assert "exit 0 produces multiple distinct messages" "1" "$([ "$distinct" -gt 1 ] && echo 1 || echo 0)"
+
+echo "--- failure exit codes ---"
+out=$(strip "$("$OK" 1 2>&1)");   assert "exit 1 message"   "✗ not okay — exit code 1 (general error)"                              "$out"
+out=$(strip "$("$OK" 127 2>&1)"); assert "exit 127 message" "✗ not okay — exit code 127 (command not found — typo? wrong PATH?)"    "$out"
+out=$(strip "$("$OK" 139 2>&1)"); assert "exit 139 message" "✗ not okay — exit code 139 (SIGSEGV — segmentation fault (memory said no))" "$out"
+out=$(strip "$("$OK" 99 2>&1)");  assert "exit 99 message"  "✗ not okay — exit code 99 (unknown)"                                   "$out"
+
+echo "--- exit code passthrough ---"
+"$OK" 42; assert "exit code passthrough" "42" "$?"
+"$OK" 1;  assert "exit 1 passthrough"   "1"  "$?"
+
+echo "--- ok init ---"
+out=$("$OK" init)
+assert "ok init prints function" "ok() { \"$OK\" \"\$?\"; }" "$out"
+
+echo ""
+echo "results: $pass passed, $fail failed"
+[ "$fail" -eq 0 ]

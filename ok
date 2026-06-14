@@ -1,5 +1,6 @@
 #!/bin/sh
 # Usage: ok        — pass exit code via shell function (after ok install)
+#        ok init   — print shell function definition (used by eval)
 #        ok install — install into detected shell (~/.bashrc / ~/.zshrc / fish)
 #        ok install bash|zsh|fish — install into specific shell
 
@@ -7,37 +8,41 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 RESET='\033[0m'
 
+SCRIPT_PATH="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+MARKER="# ok: auto-installed (do not remove)"
+
+if [ "$1" = "init" ]; then
+    printf 'ok() { "%s" "$?"; }\n' "$SCRIPT_PATH"
+    exit 0
+fi
+
 _ok_install() {
     shell="$1"
-    MARKER="# ok: auto-installed"
-    SCRIPT_PATH="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
 
     case "$shell" in
-        bash)
-            RC="$HOME/.bashrc"
-            grep -qF "$MARKER" "$RC" 2>/dev/null && echo "ok already installed in $RC" && exit 0
-            printf '\n%s\nok() { "%s" "$?"; }\n' "$MARKER" "$SCRIPT_PATH" >> "$RC"
-            echo "ok installed in $RC — run: source $RC"
-            ;;
-        zsh)
-            RC="$HOME/.zshrc"
-            grep -qF "$MARKER" "$RC" 2>/dev/null && echo "ok already installed in $RC" && exit 0
-            printf '\n%s\nok() { "%s" "$?"; }\n' "$MARKER" "$SCRIPT_PATH" >> "$RC"
-            echo "ok installed in $RC — run: source $RC"
-            ;;
+        bash) RC="$HOME/.bashrc" ;;
+        zsh)  RC="$HOME/.zshrc" ;;
         fish)
             FISH_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/fish/functions"
             FISH_FILE="$FISH_DIR/ok.fish"
-            [ -f "$FISH_FILE" ] && echo "ok already installed in $FISH_FILE" && exit 0
             mkdir -p "$FISH_DIR"
             printf 'function ok\n    "%s" $status\nend\n' "$SCRIPT_PATH" > "$FISH_FILE"
             echo "ok installed in $FISH_FILE"
+            exit 0
             ;;
         *)
             echo "Unknown shell: $shell. Supported: bash, zsh, fish" >&2
             exit 1
             ;;
     esac
+
+    # Skip if already installed
+    if grep -qF "$MARKER" "$RC" 2>/dev/null; then
+        echo "ok already installed in $RC"
+        exit 0
+    fi
+    printf '\n%s\neval "$("%s" init)"\n' "$MARKER" "$SCRIPT_PATH" >> "$RC"
+    echo "ok installed in $RC — run: source $RC"
     exit 0
 }
 

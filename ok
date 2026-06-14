@@ -77,11 +77,11 @@ if [ "$code" -eq 0 ]; then
 fi
 
 case "$code" in
-    1)   reason="general error" ;;
-    2)   reason="misuse of shell built-in" ;;
+    1)   reason="general error, sir/mam!" ;;
+    2)   reason="misuse of shell built-in!" ;;
     126) reason="command not executable — chmod +x, maybe?" ;;
     127) reason="command not found — typo? wrong PATH?" ;;
-    128) reason="invalid exit argument" ;;
+    128) reason="fatal runtime error?" ;;
     129) reason="SIGHUP (hangup)" ;;
     130) reason="SIGINT — Ctrl-C, the universal 'nope'" ;;
     131) reason="SIGQUIT" ;;
@@ -90,7 +90,7 @@ case "$code" in
     136) reason="SIGFPE (floating point exception)" ;;
     137) reason="SIGKILL — killed with prejudice" ;;
     138) reason="SIGBUS (bus error)" ;;
-    139) reason="SIGSEGV — segmentation fault (memory said no)" ;;
+    139) reason="SIGSEGV — segmentation fault (memory said no thx)" ;;
     141) reason="SIGPIPE — nobody was listening" ;;
     143) reason="SIGTERM (terminated)" ;;
     *)   reason="unknown" ;;

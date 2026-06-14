@@ -1,6 +1,8 @@
 # ok
 ok tells you whether the last command was okay.
 
+Check the PRESS.md for the press release.
+
 ## Project Motto
 
 Everything is going to be ok.
